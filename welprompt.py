@@ -21,12 +21,15 @@ class CLUI(object):
         self.startinfo = '''START'''
         self.exitinfo = '''End'''
         self.history_file = ''
-        self.commands = []
+        self.commands = {'help':self.help}
         self.globals = []
+        self.prompt_fmt_func = None
                         
     @property
     def prompt(self):
-        return '> '
+        if self.prompt_fmt_func != None:
+            return self.prompt_fmt_func()
+        else: return '> '
         
     def run(self):
         print(self.startinfo)
@@ -74,8 +77,8 @@ class CLUI(object):
             args = []
             if len(text.split()) > 1:
                 args = text.split()[1:]
-            if command in self.commands:
-                return self.__getattribute__(command)(*args)
+            if command in self.commands.keys():
+                return self.commands[command](*args)
             else:
                 return 'no such command'
             
@@ -83,12 +86,13 @@ class CLUI(object):
         return os.popen(cmd).read()
         
     def help(self, *args):
+        '''help msg'''
         msg = ''
-        if args == (): args = self.commands
+        if args == (): args = self.commands.keys()
         for command in args:
-            if command in self.commands:
+            if command in self.commands.keys():
                 msg += '{}:{}\n'.format(command, 
-                    self.__getattribute__(command).__doc__)
+                    self.commands[command].__doc__)
             else:
                 msg += '{}:{}\n'.format(command, 
                     'unkown command')
@@ -97,4 +101,17 @@ class CLUI(object):
 
 if __name__ == '__main__':
     c = CLUI()
+    c.startinfo = '''Tiny Torjan Server CLI'''
+    c.exitinfo = '''Closing all stuff'''
+    
+    def printf(fmt, *args):
+        '''this is printf'''
+        print(fmt % args)
+        
+    def prompt_fmt():
+        fmt = '{} > '.format(os.getcwd())
+        return fmt
+        
+    c.prompt_fmt_func = prompt_fmt
+    c.commands['printf'] = printf
     c.run()
