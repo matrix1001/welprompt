@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import os
 import subprocess
+import time 
 from time import sleep
 
 from prompt_toolkit.shortcuts import prompt
@@ -17,19 +18,34 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from pygments.token import Token
 
 class CLUI(object):
-    def __init__(self):
+    style = style_from_dict({
+                Token.Toolbar: '#ffffff bg:#333333',
+                })
+   
+    def get_bottom_toolbar_tokens(self, cli):
+        if self.global_info:
+            global_info = self.global_info()
+            return [(Token.Toolbar, global_info)]
+        else:
+            return [(Token.Toolbar, 'welcome to welprompt')]
+        
+    def __init__(self, name=''):
         self.startinfo = '''START'''
         self.exitinfo = '''End'''
         self.history_file = ''
         self.commands = {'help':self.help}
         self.globals = []
-        self.prompt_fmt_func = None
+        self.prompt_info = None
+        self.global_info = None
+        self.name = name
                         
     @property
     def prompt(self):
-        if self.prompt_fmt_func != None:
-            return self.prompt_fmt_func()
-        else: return '> '
+        if self.prompt_info:
+            prompt_info = self.prompt_info()
+            return '%s [%s] > ' % (self.name, prompt_info)
+        else:
+            return '%s > ' % self.name
         
     def run(self):
         print(self.startinfo)
@@ -45,8 +61,10 @@ class CLUI(object):
                     completer=completer,
                     history=history,
                     auto_suggest=AutoSuggestFromHistory(),
+                    get_bottom_toolbar_tokens=self.get_bottom_toolbar_tokens,
                     patch_stdout=True,
-                    mouse_support=True)
+                    mouse_support=True,
+                    style=self.style)
                     
                 msg = self._handler(text)
                 if msg:print(msg)
@@ -100,7 +118,7 @@ class CLUI(object):
         return msg
 
 if __name__ == '__main__':
-    c = CLUI()
+    c = CLUI('myapp')
     c.startinfo = '''Tiny Torjan Server CLI'''
     c.exitinfo = '''Closing all stuff'''
     
@@ -108,10 +126,12 @@ if __name__ == '__main__':
         '''this is printf'''
         print(fmt % args)
         
-    def prompt_fmt():
-        fmt = '{} > '.format(os.getcwd())
-        return fmt
+    def prompt_info():
+        return os.getcwd()
+    def global_info():
+        return time.ctime()
         
-    c.prompt_fmt_func = prompt_fmt
+    c.prompt_info = prompt_info
+    c.global_info = global_info
     c.commands['printf'] = printf
     c.run()
