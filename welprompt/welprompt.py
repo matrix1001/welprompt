@@ -100,7 +100,18 @@ class CLUI(object):
         self.prompt_status = None
         self.global_status = None
         self.name = name
-                        
+        
+    @property
+    def words_map(self):
+        words_map = {}
+        for cmd in self.commands:
+            candidates = []
+            doc = self.commands[cmd].__doc__.splitlines()
+            for line in doc:
+                if line.startswith('candidates:'):
+                    candidates = line[11:].split()
+            words_map[cmd] = candidates
+        return words_map
     def get_prompt_tokens(self, cli):
         if self.prompt_status:
             prompt_status = self.prompt_status()
@@ -117,10 +128,7 @@ class CLUI(object):
                 (Token.Pound,  ' > '),
             ]
     def get_candidate(self, words):
-        words_map = {
-            'test':['hello', 'bbbbb'],
-            'cmd':['ls', 'pwd'],
-        }
+        words_map = self.words_map
         if words==[]:
             return words_map.keys()
         elif len(words)==1:
@@ -202,15 +210,17 @@ class CLUI(object):
         return msg
 
 if __name__ == '__main__':
-    c = CLUI('myapp')
+    c = CLUI()
     #c.startinfo = '''Tiny Torjan Server CLI'''
     #c.exitinfo = '''Closing all stuff'''
-    
-    
 
     def printf(fmt, *args):
-        '''this is printf'''
+        '''no arg'''
         print(fmt % args)
+
+    def mycommand(cmd):
+        '''candidates:cand1 cand2 fteawta'''
+        print(cmd)
         
     def prompt_status():
         return os.getcwd()
@@ -220,4 +230,5 @@ if __name__ == '__main__':
     c.prompt_status = prompt_status
     c.global_status = global_status
     c.commands['printf'] = printf
+    c.commands['mycommand'] = mycommand
     c.run()
