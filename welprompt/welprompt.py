@@ -17,6 +17,9 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 from pygments.token import Token
 
+
+            
+        
 class CLUI(object):
     style = style_from_dict({
                 Token.Toolbar:  '#ffffff bg:#333333',
@@ -35,8 +38,25 @@ class CLUI(object):
             return [(Token.Toolbar, 'welcome to welprompt')]
         
     def __init__(self, name=''):
-        self.startinfo = '''START'''
-        self.exitinfo = '''End'''
+        self.startinfo = '''
+██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
+██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
+██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
+██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
+╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
+ ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝
+                                                              
+'''
+        #http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=bye
+        self.exitinfo = '''
+██████╗ ██╗   ██╗███████╗
+██╔══██╗╚██╗ ██╔╝██╔════╝
+██████╔╝ ╚████╔╝ █████╗  
+██╔══██╗  ╚██╔╝  ██╔══╝  
+██████╔╝   ██║   ███████╗
+╚═════╝    ╚═╝   ╚══════╝
+                         
+'''
         self.history_file = ''
         self.commands = {'help':self.help}
         self.globals = []
@@ -133,8 +153,8 @@ class CLUI(object):
 
 if __name__ == '__main__':
     c = CLUI('myapp')
-    c.startinfo = '''Tiny Torjan Server CLI'''
-    c.exitinfo = '''Closing all stuff'''
+    #c.startinfo = '''Tiny Torjan Server CLI'''
+    #c.exitinfo = '''Closing all stuff'''
     
     def printf(fmt, *args):
         '''this is printf'''
