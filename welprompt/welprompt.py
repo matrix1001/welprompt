@@ -19,13 +19,18 @@ from pygments.token import Token
 
 class CLUI(object):
     style = style_from_dict({
-                Token.Toolbar: '#ffffff bg:#333333',
+                Token.Toolbar:  '#ffffff bg:#333333',
+                
+                Token.Name:     '#ff0000',
+                Token.Status:   '#ff00ff',
+                Token.White:    '#ffffff',
+                Token.Pound:    '#ffa500',
                 })
    
     def get_bottom_toolbar_tokens(self, cli):
-        if self.global_info:
-            global_info = self.global_info()
-            return [(Token.Toolbar, global_info)]
+        if self.global_status:
+            global_status = self.global_status()
+            return [(Token.Toolbar, global_status)]
         else:
             return [(Token.Toolbar, 'welcome to welprompt')]
         
@@ -35,17 +40,25 @@ class CLUI(object):
         self.history_file = ''
         self.commands = {'help':self.help}
         self.globals = []
-        self.prompt_info = None
-        self.global_info = None
+        self.prompt_status = None
+        self.global_status = None
         self.name = name
                         
-    @property
-    def prompt(self):
-        if self.prompt_info:
-            prompt_info = self.prompt_info()
-            return '%s [%s] > ' % (self.name, prompt_info)
+    def get_prompt_tokens(self, cli):
+        if self.prompt_status:
+            prompt_status = self.prompt_status()
+            return [
+                (Token.Name,   self.name),
+                (Token.White,  ' ['),
+                (Token.Status, prompt_status),
+                (Token.White,  '] '),
+                (Token.Pound,  '> '),
+            ]
         else:
-            return '%s > ' % self.name
+            return [
+                (Token.Name,   self.name),
+                (Token.Pound,  ' > '),
+            ]
         
     def run(self):
         print(self.startinfo)
@@ -57,13 +70,14 @@ class CLUI(object):
         while True:
             try:
                 text = prompt(
-                    self.prompt,
+                    get_prompt_tokens=self.get_prompt_tokens,
                     completer=completer,
                     history=history,
                     auto_suggest=AutoSuggestFromHistory(),
                     get_bottom_toolbar_tokens=self.get_bottom_toolbar_tokens,
                     patch_stdout=True,
                     mouse_support=True,
+                    true_color=True,
                     style=self.style)
                     
                 msg = self._handler(text)
@@ -126,12 +140,12 @@ if __name__ == '__main__':
         '''this is printf'''
         print(fmt % args)
         
-    def prompt_info():
+    def prompt_status():
         return os.getcwd()
-    def global_info():
+    def global_status():
         return time.ctime()
         
-    c.prompt_info = prompt_info
-    c.global_info = global_info
+    c.prompt_status = prompt_status
+    c.global_status = global_status
     c.commands['printf'] = printf
     c.run()
