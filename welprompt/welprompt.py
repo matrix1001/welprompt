@@ -17,17 +17,54 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 from pygments.token import Token
 
+class MatchCompleter(Completer):
+    def __init__(self, get_candidate, 
+            ignore_case=False, meta_dict=None, match_middle=True):
+        self.get_candidate = get_candidate
+        self.ignore_case = ignore_case
+        self.meta_dict = meta_dict or {}
+        self.match_middle = match_middle
 
+    def get_completions(self, document, complete_event):
+        # Get word/text before cursor.
+        def word_matches(word):
+            if self.ignore_case:
+                word = word.lower()
+            if self.match_middle:
+                return word_before_cursor in word
+            else:
+                return word.startswith(word_before_cursor)
+        text_before_cursor = document.text_before_cursor
+        words = text_before_cursor.split()
+        if text_before_cursor=='':
+            words.append('')
+        elif text_before_cursor[-1]==' ':
+            words.append('')
+    
+        words_num = len(words)
+        words_before = words[:-1]
+        candidates = self.get_candidate(words_before)
+        word_before_cursor = words[-1]
+
+        if self.ignore_case:
+            word_before_cursor = word_before_cursor.lower()
+
+        for a in candidates:
+            if word_matches(a):
+                display_meta = self.meta_dict.get(a, '')
+                yield Completion(a, -len(word_before_cursor), display_meta=display_meta)
+ 
             
         
 class CLUI(object):
+    #https://www.computerhope.com/htmcolor.htm
     style = style_from_dict({
-                Token.Toolbar:  '#ffffff bg:#333333',
+                Token.Toolbar:  '#000000 bg:#C0C0C0',
                 
                 Token.Name:     '#ff0000',
-                Token.Status:   '#ff00ff',
+                Token.Status:   '#00FFFF',
                 Token.White:    '#ffffff',
-                Token.Pound:    '#ffa500',
+                Token.Pound:    '#00ff00',
                 })
    
     def get_bottom_toolbar_tokens(self, cli):
@@ -79,14 +116,27 @@ class CLUI(object):
                 (Token.Name,   self.name),
                 (Token.Pound,  ' > '),
             ]
-        
+    def get_candidate(self, words):
+        words_map = {
+            'test':['hello', 'bbbbb'],
+            'cmd':['ls', 'pwd'],
+        }
+        if words==[]:
+            return words_map.keys()
+        elif len(words)==1:
+            if words[0] in words_map:
+                return words_map[words[0]]
+            else:
+                return []
+        else:
+            return []
     def run(self):
         print(self.startinfo)
         if self.history_file == '':
             history = InMemoryHistory()
         else:
             history = FileHistory(os.path.expanduser(self.history_file))
-        completer = WordCompleter(self.commands)
+        completer = MatchCompleter(self.get_candidate)
         while True:
             try:
                 text = prompt(
@@ -156,6 +206,8 @@ if __name__ == '__main__':
     #c.startinfo = '''Tiny Torjan Server CLI'''
     #c.exitinfo = '''Closing all stuff'''
     
+    
+
     def printf(fmt, *args):
         '''this is printf'''
         print(fmt % args)
