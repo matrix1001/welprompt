@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import os
 import subprocess
 import time 
+import six
 from time import sleep
 
 from prompt_toolkit.shortcuts import prompt
@@ -19,7 +21,7 @@ from pygments.token import Token
 
 class MatchCompleter(Completer):
     def __init__(self, get_candidate, 
-            ignore_case=False, meta_dict=None, match_middle=True):
+            ignore_case=False, meta_dict=None, match_middle=False):
         self.get_candidate = get_candidate
         self.ignore_case = ignore_case
         self.meta_dict = meta_dict or {}
@@ -96,7 +98,6 @@ class CLUI(object):
 '''
         self.history_file = ''
         self.commands = {'help':self.help}
-        self.globals = []
         self.prompt_status = None
         self.global_status = None
         self.name = name
@@ -162,6 +163,7 @@ class CLUI(object):
                 if msg:print(msg)
                 
             except KeyboardInterrupt:
+                print('KeyboardInterrupt')
                 continue
             except EOFError:
                 break
@@ -173,10 +175,9 @@ class CLUI(object):
         elif text[0] == '!':
             return self._execve(text[1:])
         
-        elif text[0] == ':':
+        elif text[0] == '%':
             try:
-                d = dict(locals(), **globals())
-                exec(text[1:], d, d)
+                six.exec_(text[1:], locals(), globals())
             except Exception as e:
                 return str(e)
             
@@ -197,29 +198,33 @@ class CLUI(object):
         
     def help(self, *args):
         '''help msg'''
-        msg = ''
+        
+        msg = '?: alias of help\n!: execve shell command\n%: exec python script\nctrl+d: exit\n'
         if args == (): args = self.commands.keys()
         for command in args:
             if command in self.commands.keys():
-                msg += '{}:{}\n'.format(command, 
-                    self.commands[command].__doc__)
+                nindent = '\n  '+' '*len(command)
+                doc = self.commands[command].__doc__
+                doc = doc.splitlines()
+                doc = nindent.join(doc)
+                msg += '{}: {}\n'.format(command, 
+                    doc)
             else:
-                msg += '{}:{}\n'.format(command, 
+                msg += '{}: {}\n'.format(command, 
                     'unkown command')
             
         return msg
 
 if __name__ == '__main__':
-    c = CLUI()
-    #c.startinfo = '''Tiny Torjan Server CLI'''
-    #c.exitinfo = '''Closing all stuff'''
+    c = CLUI('myapp')
 
     def printf(fmt, *args):
         '''no arg'''
         print(fmt % args)
 
     def mycommand(cmd):
-        '''candidates:cand1 cand2 fteawta'''
+        '''candidates:cand1 cand2 fteawta
+tsetes'''
         print(cmd)
         
     def prompt_status():
