@@ -1,9 +1,5 @@
 # welprompt
 a light CLUI tools for quickly constructing your python tools
-# install
-```python
-python setup.py install
-```
 # usage
 ```python
 def this_is_your_function(cmd):
